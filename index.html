@@ -300,7 +300,7 @@
       });
 
       grid.innerHTML = filtered.map(card => `
-        <div class="card" onclick="window.open('${card.url}', '_blank')">
+        <a href="${card.url}" target="_blank" rel="noopener noreferrer" class="card">
           <div>
             <div class="card-header">
               <img class="card-icon" src="${getFavicon(card.url)}" alt="" onerror="this.style.display='none'">
@@ -310,9 +310,9 @@
           </div>
           <div class="card-footer">
             <span class="tag">${card.category}</span>
-            <button class="btn-delete" onclick="event.stopPropagation(); deleteCard(${card.id})">Xóa</button>
+            <button class="btn-delete" onclick="event.preventDefault(); event.stopPropagation(); deleteCard(${card.id})">Xóa</button>
           </div>
-        </div>
+        </a>
       `).join('');
     }
 
