@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Personal Nav Hub</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --border: #334155;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 2rem;
+      min-height: 100vh;
+    }
+
+    header {
+      max-width: 1200px;
+      margin: 0 auto 2rem auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .controls {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: space-between;
+    }
+
+    input, select, button {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+    }
+
+    .search-bar {
+      flex: 1;
+      min-width: 250px;
+    }
+
+    .btn-add {
+      background: var(--accent);
+      color: #0f172a;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: background 0.2s;
+    }
+
+    .btn-add:hover {
+      background: var(--accent-hover);
+      color: #fff;
+    }
+
+    .categories {
+      display: flex;
+      gap: 0.5rem;
+      max-width: 1200px;
+      margin: 0 auto 1.5rem auto;
+      overflow-x: auto;
+      padding-bottom: 0.5rem;
+    }
+
+    .cat-btn {
+      cursor: pointer;
+      white-space: nowrap;
+      background: transparent;
+      border: 1px solid var(--border);
+    }
+
+    .cat-btn.active {
+      background: var(--accent);
+      color: #0f172a;
+      font-weight: 600;
+      border-color: var(--accent);
+    }
+
+    .grid {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s, border-color 0.2s;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .card-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .card:hover .card-title {
+      color: var(--accent);
+    }
+
+    .card-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      line-height: 1.4;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .tag {
+      font-size: 0.75rem;
+      background: rgba(56, 189, 248, 0.1);
+      color: var(--accent);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .btn-delete {
+      background: transparent;
+      border: none;
+      color: #ef4444;
+      cursor: pointer;
+      font-size: 0.8rem;
+      opacity: 0.6;
+    }
+
+    .btn-delete:hover {
+      opacity: 1;
+    }
+
+    /* Modal Form */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      padding: 2rem;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      border: 1px solid var(--border);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Personal Navigation Hub</h1>
+    <div class="controls">
+      <input type="text" id="searchInput" class="search-bar" placeholder="Tìm kiếm trang web..." oninput="renderCards()">
+      <button class="btn-add" onclick="openModal()">+ Thêm Website</button>
+    </div>
+  </header>
+
+  <div class="categories" id="categoryContainer"></div>
+  <main class="grid" id="cardGrid"></main>
+
+  <!-- Modal thêm mới -->
+  <div class="modal" id="addModal">
+    <div class="modal-content">
+      <h2>Thêm thẻ mới</h2>
+      <input type="text" id="titleInput" placeholder="Tên trang (VD: GitHub)">
+      <input type="url" id="urlInput" placeholder="Đường dẫn (https://...)">
+      <input type="text" id="catInput" placeholder="Danh mục (VD: Tools, Utility, Learning)">
+      <input type="text" id="descInput" placeholder="Mô tả ngắn">
+      <div class="modal-actions">
+        <button onclick="closeModal()">Hủy</button>
+        <button class="btn-add" onclick="saveCard()">Lưu</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Dữ liệu danh sách web sẵn có
+    const defaultData = [
+      { id: 1, title: 'App Điểm Danh', url: 'https://attendance-ver1.vercel.app', category: 'Tools', desc: 'Ứng dụng quản lý điểm danh' },
+      { id: 2, title: 'ASNM Trí Nhớ', url: 'https://asnm.io.vn', category: 'Learning', desc: 'Ứng dụng rèn luyện trí nhớ' },
+      { id: 3, title: 'Date With Hung', url: 'https://date-with-hung.vercel.app', category: 'Social', desc: 'Ứng dụng hẹn hò' },
+      { id: 4, title: 'Life RPG', url: 'https://survive-i.vercel.app', category: 'Game', desc: 'Ứng dụng quản lý cuộc sống kiểu RPG' },
+      { id: 5, title: 'FunQuiz', url: 'https://funquiz.io.vn', category: 'Learning', desc: 'Ứng dụng học tập và trắc nghiệm' }
+    ];
+
+    let cards = JSON.parse(localStorage.getItem('my_nav_cards')) || defaultData;
+    let currentCategory = 'All';
+
+    function saveToStorage() {
+      localStorage.setItem('my_nav_cards', JSON.stringify(cards));
+    }
+
+    function getFavicon(url) {
+      try {
+        const domain = new URL(url).hostname;
+        return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+      } catch {
+        return '';
+      }
+    }
+
+    function renderCategories() {
+      const categories = ['All', ...new Set(cards.map(c => c.category).filter(Boolean))];
+      const container = document.getElementById('categoryContainer');
+      container.innerHTML = categories.map(cat => `
+        <button class="cat-btn ${cat === currentCategory ? 'active' : ''}" 
+                onclick="setCategory('${cat}')">${cat}</button>
+      `).join('');
+    }
+
+    function setCategory(cat) {
+      currentCategory = cat;
+      renderCategories();
+      renderCards();
+    }
+
+    function renderCards() {
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const grid = document.getElementById('cardGrid');
+
+      const filtered = cards.filter(card => {
+        const matchesCat = currentCategory === 'All' || card.category === currentCategory;
+        const matchesSearch = card.title.toLowerCase().includes(search) || 
+                              (card.desc && card.desc.toLowerCase().includes(search));
+        return matchesCat && matchesSearch;
+      });
+
+      grid.innerHTML = filtered.map(card => `
+        <div class="card" onclick="window.open('${card.url}', '_blank')">
+          <div>
+            <div class="card-header">
+              <img class="card-icon" src="${getFavicon(card.url)}" alt="" onerror="this.style.display='none'">
+              <span class="card-title">${card.title}</span>
+            </div>
+            <p class="card-desc">${card.desc || 'Không có mô tả'}</p>
+          </div>
+          <div class="card-footer">
+            <span class="tag">${card.category}</span>
+            <button class="btn-delete" onclick="event.stopPropagation(); deleteCard(${card.id})">Xóa</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function deleteCard(id) {
+      cards = cards.filter(c => c.id !== id);
+      saveToStorage();
+      renderCategories();
+      renderCards();
+    }
+
+    function openModal() {
+      document.getElementById('addModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('addModal').style.display = 'none';
+      document.getElementById('titleInput').value = '';
+      document.getElementById('urlInput').value = '';
+      document.getElementById('catInput').value = '';
+      document.getElementById('descInput').value = '';
+    }
+
+    function saveCard() {
+      const title = document.getElementById('titleInput').value.trim();
+      let url = document.getElementById('urlInput').value.trim();
+      const category = document.getElementById('catInput').value.trim() || 'General';
+      const desc = document.getElementById('descInput').value.trim();
+
+      if (!title || !url) return alert('Vui lòng nhập Tên và URL');
+
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+      }
+
+      cards.push({ id: Date.now(), title, url, category, desc });
+      saveToStorage();
+      closeModal();
+      renderCategories();
+      renderCards();
+    }
+
+    // Init
+    renderCategories();
+    renderCards();
+  </script>
+</body>
+</html>
